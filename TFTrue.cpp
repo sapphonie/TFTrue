@@ -32,6 +32,7 @@
 #include "tournament.h"
 #include "editablecommands.h"
 
+
 #ifdef DEBUG
 	#define NO_AUTOUPDATE
 #endif
@@ -69,6 +70,8 @@ IEngineTrace*           g_pEngineTrace      = nullptr;
 IServerTools*           g_pServerTools      = nullptr;
 
 CSteamGameServerAPIContext steam;
+
+
 
 //---------------------------------------------------------------------------------
 // Purpose: called when the plugin is loaded, load the interface we need from the engine

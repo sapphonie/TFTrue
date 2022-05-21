@@ -275,17 +275,37 @@ void CItems::RebuildWhitelist(IConVar *var, const char *pOldValue, float flOldVa
 		// Handle int vs string whitelist ids
 		if (sscanf(tftrue_whitelist_id.GetString(), "%d", &iWhiteListID) == 1)
 		{
-			V_snprintf(szConfigURL, sizeof(szConfigURL),   "https://whitelist.tf/custom_whitelist_%d.txt", tftrue_whitelist_id.GetInt());
-			V_snprintf(szConfigPath, sizeof(szConfigPath), "cfg/custom_whitelist_%d.txt",          tftrue_whitelist_id.GetInt());
+			V_snprintf(szConfigURL, sizeof(szConfigURL),   "https://whitelist.tf/custom_whitelist_%d.txt",  tftrue_whitelist_id.GetInt());
+			V_snprintf(szConfigPath, sizeof(szConfigPath), "cfg/custom_whitelist_%d.txt",                   tftrue_whitelist_id.GetInt());
 		}
 		else
 		{
-			V_snprintf(szConfigURL, sizeof(szConfigURL),   "https://whitelist.tf/%s.txt", tftrue_whitelist_id.GetString());
-			V_snprintf(szConfigPath, sizeof(szConfigPath), "cfg/%s.txt",          tftrue_whitelist_id.GetString());
+			V_snprintf(szConfigURL, sizeof(szConfigURL),   "https://whitelist.tf/%s.txt",   tftrue_whitelist_id.GetString());
+			V_snprintf(szConfigPath, sizeof(szConfigPath), "cfg/%s.txt",                    tftrue_whitelist_id.GetString());
 		}
 
-		// Download our whitelist
-		g_Tournament.DownloadConfig(szConfigURL);
+		if (GetLastUpdateTime())
+		{
+			int localmtime = filesystem->GetFileTime(szConfigPath, "MOD");
+
+			// if localmtime = 0 the file doesn't exist
+			// wltf_mtime == the last time whitelist tf updated their item schema
+			// if wltf's timestamp > lastupdatetime then the whitelist needs an update
+			if (!localmtime || wltf_mtime > localmtime)
+			{
+				// Download our whitelist!
+				g_Tournament.DownloadConfig(szConfigURL);
+			}
+			else
+			{
+				Warning("[TFTruer] Not redownloading a non-changed whitelist.\n");
+			}
+		}
+		else
+		{
+			Warning("[TFTruer] Couldn't get an update time from whitelist.tf???\n");
+			g_Tournament.DownloadConfig(szConfigURL);
+		}
 
 		// Read the whitelist display name for the tftrue commands
 		FileHandle_t fh = filesystem->Open(szConfigPath, "r", "MOD");
@@ -297,7 +317,8 @@ void CItems::RebuildWhitelist(IConVar *var, const char *pOldValue, float flOldVa
 			filesystem->ReadLine(szLine, sizeof(szLine), fh);
 			filesystem->ReadLine(szLine, sizeof(szLine), fh);
 
-			if(!strncmp("// Whitelist: ", szLine, 14))
+			// what the fuck is this doing
+			if (!strncmp("// Whitelist: ", szLine, 14))
 			{
 				V_strncpy(g_Items.szWhiteListName, szLine+13, sizeof(g_Items.szWhiteListName));
 				g_Items.szWhiteListName[strlen(g_Items.szWhiteListName)-2] = '\0';
@@ -370,11 +391,12 @@ void CItems::RebuildWhitelist(IConVar *var, const char *pOldValue, float flOldVa
 		}
 
 		// Add item to the whitelist
-		if  (
-				   (tftrue_no_hats.GetInt()   && !strcmpi(szItemSlot, "head"))
-				|| (tftrue_no_misc.GetInt()   && !strcmpi(szItemSlot, "misc"))
-				|| (tftrue_no_action.GetInt() && !strcmpi(szItemSlot, "action"))
-			)
+		if
+		(
+			   (tftrue_no_hats.GetInt()   && !strcmpi(szItemSlot, "head"))
+			|| (tftrue_no_misc.GetInt()   && !strcmpi(szItemSlot, "misc"))
+			|| (tftrue_no_action.GetInt() && !strcmpi(szItemSlot, "action"))
+		)
 		{
 			g_Items.item_whitelist->SetInt(szItemName, 0);
 		}
@@ -392,7 +414,8 @@ void CItems::RebuildWhitelist(IConVar *var, const char *pOldValue, float flOldVa
 	reinterpret_cast<ReloadWhitelistFn>(g_Items.ReloadWhitelist)(pEconItemSystem);
 
 	// Reload items of all players
-	for ( int i = 1; i <= g_pServer->GetClientCount(); i++ )
+	// Is this really doing that?? Don't you need to loop thru MaxClients ?
+	for ( int i = 1; i <= g_pServer->GetMaxClients(); i++ )
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(i);
 		if (!pPlayer)

@@ -605,8 +605,17 @@ void CLogs::FireGameEvent(IGameEvent *pEvent)
 		int iClass = pEvent->GetInt("class");
 		int iIndex = GetEntIndexFromUserID(iUserId);
 
-		const char *szClass[] = {"Scout", "Sniper", "Soldier", "Demoman", "Medic",
-								 "Heavy", "Pyro", "Spy", "Engineer"};
+		const char *szClass[] = {
+			"Scout",
+			"Sniper",
+			"Soldier",
+			"Demoman",
+			"Medic",
+			"Heavy",
+			"Pyro",
+			"Spy",
+			"Engineer"
+		};
 
 		if(iIndex != -1)
 		{
@@ -1014,7 +1023,12 @@ void CLogs::Event_PlayerDamage( void *pTFGameStats, EDX CBasePlayer *pPlayer, co
 					}
 				}
 				// If the attacker hit the victim with a direct hit. For pipes a workaround(m_bTouched) is needed since the event "projectile_direct_hit" gets triggered after the damage
-				if (g_Logs.m_uiLastDirectHitVictim[IndexOfEdict(pEdictAttacker)] == IndexOfEdict(pEdictVictim) || !*g_EntityProps.GetSendProp<bool>(info.GetInflictor(), "m_bTouched"))
+				if
+				(
+					int(g_Logs.m_uiLastDirectHitVictim[IndexOfEdict(pEdictAttacker)]) == IndexOfEdict(pEdictVictim)
+					||
+					!*g_EntityProps.GetSendProp<bool>(info.GetInflictor(), "m_bTouched")
+				)
 				{
 					V_strncpy(szDirect, " (direct \"1\")", sizeof(szDirect));
 				}
@@ -1076,7 +1090,9 @@ void CLogs::LogPrint( IVEngineServer *pServer, EDX const char *msg )
 	if(pChargeDeployed && strlen(pChargeDeployed) == 30)
 	{
 		if(!strstr(msg, ">\" say \"")) // Make sure the player didn't try to fake it
+		{
 			return;
+		}
 	}
 
 	g_Logs.LogPrintRoute.CallOriginalFunction<LogPrint_t>()(pServer, msg);
@@ -1327,8 +1343,10 @@ void CLogs::Upload(bool bRoundEnd)
 
 		// If the game wrote to the log after we got the file size
 		// we might send too much data, so we need to remove the extra bytes
-		if(totalBytesRead > lFileLength)
+		if ((long)totalBytesRead > lFileLength)
+		{
 			numBytesRead -= (totalBytesRead - lFileLength);
+		}
 
 		if(send(sock, szContent2, numBytesRead, 0) <= 0)
 		{

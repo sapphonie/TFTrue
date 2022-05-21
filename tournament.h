@@ -24,6 +24,7 @@
 #include "ModuleScanner.h"
 #include <vector>
 #include <memory>
+#include <regex>
 
 class CTournament: public IGameEventListener2
 {

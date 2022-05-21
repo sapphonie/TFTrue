@@ -142,3 +142,5 @@ inline int IndexOfEntity(CBaseEntity* pEntity)
 #ifdef _WIN32
 DWORD GetModuleLoadCount(HMODULE hmod);
 #endif
+
+std::string ReplaceAlphaWithUnderscore(std::string ourstring);

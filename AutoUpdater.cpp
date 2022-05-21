@@ -270,7 +270,7 @@ void CAutoUpdater::UpdateCallback(HTTPRequestCompleted_t *arg, bool bFailed)
 
 void CAutoUpdater::OnHTTPRequestDataReceived(HTTPRequestDataReceived_t *pParam)
 {
-    if(!m_fNewBin.is_open())
+    if (!m_fNewBin.is_open())
     {
         Msg("[TFTruer] Failed to open the new binary\n");
         return;
@@ -279,7 +279,9 @@ void CAutoUpdater::OnHTTPRequestDataReceived(HTTPRequestDataReceived_t *pParam)
     // Download the new binary
     uint8 *pResponse = new uint8[pParam->m_cBytesReceived];
     if(steam.SteamHTTP()->GetHTTPStreamingResponseBodyData(pParam->m_hRequest, pParam->m_cOffset, pResponse, pParam->m_cBytesReceived))
+    {
         m_fNewBin.write((const char*)pResponse, pParam->m_cBytesReceived);
+    }
 
     delete[] pResponse;
 }

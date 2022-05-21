@@ -1,3 +1,6 @@
+# SET (CMAKE_C_COMPILER      "/usr/bin/clang")
+# SET (CMAKE_CXX_COMPILER    "/usr/bin/clang++")
+
 cmake_minimum_required(VERSION 3.16)
 project(tftruer)
 
@@ -54,6 +57,7 @@ endif()
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 if(UNIX)
+
     target_compile_definitions(tftruer PRIVATE
         GNUC
         LINUX
@@ -70,40 +74,39 @@ if(UNIX)
         ${CMAKE_CURRENT_SOURCE_DIR}/ModuleScanner/ModuleScanner.a
         ${CMAKE_CURRENT_SOURCE_DIR}/hl2sdk-tf2/lib/linux/mathlib_i486.a
         ${CMAKE_CURRENT_SOURCE_DIR}/hl2sdk-tf2/lib/linux/tier1_i486.a
-        "-L${CMAKE_CURRENT_SOURCE_DIR}/bin"                     libsteam_api.so
-        "-L${CMAKE_CURRENT_SOURCE_DIR}/hl2sdk-tf2/lib/linux/"   libtier0_srv.so
-        "-L${CMAKE_CURRENT_SOURCE_DIR}/hl2sdk-tf2/lib/linux/"   libvstdlib_srv.so
+        "-L${CMAKE_CURRENT_SOURCE_DIR}/bin"                    libsteam_api.so
+        "-L${CMAKE_CURRENT_SOURCE_DIR}/hl2sdk-tf2/lib/linux"   libtier0_srv.so
+        "-L${CMAKE_CURRENT_SOURCE_DIR}/hl2sdk-tf2/lib/linux"   libvstdlib_srv.so
     )
 
     target_compile_options(tftruer PUBLIC
         -Wall
+        -Ofast
+        -flto
         -Wno-packed-not-aligned
         -Wno-class-memaccess
-        -Wno-delete-non-virtual-dtor
-        -Wno-invalid-offsetof
-        -Wno-overloaded-virtual
-        -Wno-reorder
-        -Wno-sign-compare
-        -Wno-unknown-pragmas
-        -Wno-unused
+        # -Wno-delete-non-virtual-dtor
+        # -Wno-invalid-offsetof
+        # -Wno-overloaded-virtual
+        # -Wno-reorder
+        # -Wno-sign-compare
+        # -Wno-unknown-pragmas
+        # -Wno-unused
         -fno-strict-aliasing
-        -fpermissive
+        # -fpermissive
         -fvisibility-inlines-hidden
         -fvisibility=hidden
         -m32
         -march=pentium3
         -mmmx
         -msse
-        -std=c++11
+        -std=c++14
         # https://github.com/alliedmodders/sourcemod/blob/1fbe5e1daaee9ba44164078fe7f59d862786e612/public/sample_ext/AMBuildScript#L161-L164
         -Dstrcmpi=stricmp
         -Dstricmp=strcasecmp
         -D_stricmp=strcasecmp
         -D_snprintf=snprintf
         -D_vsnprintf=vsnprintf
-        # duh
-        -O3
-        -flto
     )
 
     target_link_options(tftruer PUBLIC
@@ -116,6 +119,8 @@ if(UNIX)
         -static-libgcc
         -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/version-script
         -flto
+        -lcurl
+        # -static
     )
 
 endif()
@@ -153,5 +158,6 @@ if(WIN32)
         -OPT:REF
         -FORCE
         -SAFESEH:NO
+        # Wl,--allow-multiple-definition
     )
 endif()

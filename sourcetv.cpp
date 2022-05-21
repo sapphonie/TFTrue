@@ -104,8 +104,13 @@ void CSourceTV::StopTVRecord()
 	static ConVarRef mp_tournament("mp_tournament");
 	static ConVarRef tf_gamemode_mvm("tf_gamemode_mvm");
 
-	if(tv_enable.GetBool() && tftrue_tv_autorecord.GetBool() && mp_tournament.GetBool()
-			&& !tf_gamemode_mvm.GetBool())
+	if
+	(
+			tv_enable.GetBool()
+		&&  tftrue_tv_autorecord.GetBool()
+		&&  mp_tournament.GetBool()
+		&&  !tf_gamemode_mvm.GetBool()
+	)
 	{
 		engine->InsertServerCommand("tv_stoprecord\n");
 		engine->ServerExecute();
@@ -144,22 +149,15 @@ void CSourceTV::Prefix_Callback( IConVar *var, const char *pOldValue, float flOl
 {
 	ConVar* v = (ConVar*)var;
 
-	char szPrefix[50];
+	std::string strPrefix = v->GetString();
 
-	V_strncpy(szPrefix, v->GetString(), sizeof(szPrefix));
+	ReplaceAlphaWithUnderscore(strPrefix);
 
-	for(int i = 0; i < sizeof(szPrefix)/sizeof(char); i++)
+	char szPrefix[64];
+	strncpy(szPrefix, strPrefix.c_str(), sizeof(szPrefix));
+
+	if (strcmp(v->GetString(), szPrefix) != 0)
 	{
-		if(!szPrefix[i])
-			break;
-
-		if((szPrefix[i] >= '0' && szPrefix[i] <= '9')
-				|| (szPrefix[i] >= 'A' && szPrefix[i] <= 'Z')
-				|| (szPrefix[i] >= 'a' && szPrefix[i] <= 'z'))
-			continue;
-		else
-			szPrefix[i] = '_';
-	}
-	if(strcmp(v->GetString(), szPrefix) != 0)
 		v->SetValue(szPrefix);
+	}
 }

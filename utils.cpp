@@ -709,3 +709,11 @@ DWORD GetModuleLoadCount(HMODULE hmod)
 	return NULL;
 }
 #endif
+
+
+std::string ReplaceAlphaWithUnderscore(std::string ourstring)
+{
+	std::regex alphargx("[^a-zA-Z0-9]");
+	std::regex_replace(ourstring, alphargx, "_");
+	return ourstring;
+}
