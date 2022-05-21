@@ -37,6 +37,8 @@ ConVar tftrue_tv_prefix("tftrue_tv_prefix", "", FCVAR_NONE,
 
 CSourceTV::CSourceTV()
 {
+	// ?
+	// m_szTVRecord = "";
 	memset(m_szTVRecord, 0, sizeof(m_szTVRecord));
 }
 
@@ -48,8 +50,8 @@ bool CSourceTV::Init()
 	((EditableConVar*)tv_enable.GetLinkedConVar())->m_fnChangeCallback = &CSourceTV::Enable_Callback;
 
 	ConVarRef tv_snapshotrate("tv_snapshotrate");
-	tv_snapshotrate.SetValue("66");
 	ConVarRef tv_maxrate("tv_maxrate");
+	tv_snapshotrate.SetValue("66");
 	tv_maxrate.SetValue("0");
 
 	return true;
@@ -64,7 +66,7 @@ void CSourceTV::OnUnload()
 void CSourceTV::OnTournamentStarted(const char *szBlueTeamName, const char* szRedTeamName)
 {
 	static ConVarRef tv_enable("tv_enable");
-	if(tv_enable.GetBool() && tftrue_tv_autorecord.GetBool())
+	if (tv_enable.GetBool() && tftrue_tv_autorecord.GetBool())
 	{
 		char recordtime[20];
 		time_t rawtime;
@@ -84,9 +86,13 @@ void CSourceTV::OnTournamentStarted(const char *szBlueTeamName, const char* szRe
 		}
 
 		if(strcmp(tftrue_tv_prefix.GetString(), ""))
+		{
 			V_snprintf(m_szTVRecord, sizeof(m_szTVRecord), "tv_record \"%s%.50s-%s-%s_vs_%s-%s\"\n", szFolderName, tftrue_tv_prefix.GetString(), recordtime, szBlueTeamName, szRedTeamName, gpGlobals->mapname.ToCStr());
+		}
 		else
+		{
 			V_snprintf(m_szTVRecord, sizeof(m_szTVRecord), "tv_record \"%s%s-%s_vs_%s-%s\"\n", szFolderName, recordtime, szBlueTeamName, szRedTeamName, gpGlobals->mapname.ToCStr());
+		}
 
 		engine->InsertServerCommand(m_szTVRecord);
 		engine->ServerExecute();
@@ -104,8 +110,13 @@ void CSourceTV::StopTVRecord()
 	static ConVarRef mp_tournament("mp_tournament");
 	static ConVarRef tf_gamemode_mvm("tf_gamemode_mvm");
 
-	if(tv_enable.GetBool() && tftrue_tv_autorecord.GetBool() && mp_tournament.GetBool()
-			&& !tf_gamemode_mvm.GetBool())
+	if
+	(
+			tv_enable.GetBool()
+		&&  tftrue_tv_autorecord.GetBool()
+		&&  mp_tournament.GetBool()
+		&&  !tf_gamemode_mvm.GetBool()
+	)
 	{
 		engine->InsertServerCommand("tv_stoprecord\n");
 		engine->ServerExecute();
@@ -144,22 +155,15 @@ void CSourceTV::Prefix_Callback( IConVar *var, const char *pOldValue, float flOl
 {
 	ConVar* v = (ConVar*)var;
 
-	char szPrefix[50];
+	std::string strPrefix = v->GetString();
 
-	V_strncpy(szPrefix, v->GetString(), sizeof(szPrefix));
+	ReplaceAlphaWithUnderscore(strPrefix);
 
-	for(int i = 0; i < sizeof(szPrefix)/sizeof(char); i++)
+	char szPrefix[64];
+	strncpy(szPrefix, strPrefix.c_str(), sizeof(szPrefix));
+
+	if (strcmp(v->GetString(), szPrefix) != 0)
 	{
-		if(!szPrefix[i])
-			break;
-
-		if((szPrefix[i] >= '0' && szPrefix[i] <= '9')
-				|| (szPrefix[i] >= 'A' && szPrefix[i] <= 'Z')
-				|| (szPrefix[i] >= 'a' && szPrefix[i] <= 'z'))
-			continue;
-		else
-			szPrefix[i] = '_';
-	}
-	if(strcmp(v->GetString(), szPrefix) != 0)
 		v->SetValue(szPrefix);
+	}
 }

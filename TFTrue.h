@@ -21,25 +21,28 @@
 #include "SDK.h"
 #include "FunctionRoute.h"
 
+#define TFMAXPLAYERS 33
+
 // #include "valve_minmax_off.h"
 #include <mutex>
 #include <map>
+#include <string.h>
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#pragma comment(lib, "ws2_32.lib")
+	#define WIN32_LEAN_AND_MEAN
+	#include <winsock2.h>
+	#pragma comment(lib, "ws2_32.lib")
 #else
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <netdb.h>
-#define closesocket(s) close(s)
-typedef int SOCKET;
-typedef struct sockaddr SOCKADDR;
-#define INVALID_SOCKET -1
+	#include <sys/socket.h>
+	#include <fcntl.h>
+	#include <netinet/in.h>
+	#include <arpa/inet.h>
+	#include <unistd.h>
+	#include <netdb.h>
+	#define closesocket(s) close(s)
+	typedef int SOCKET;
+	typedef struct sockaddr SOCKADDR;
+	#define INVALID_SOCKET -1
 #endif
 
 class CTFTrue: public IServerPluginCallbacks

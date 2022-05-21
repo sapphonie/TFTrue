@@ -20,7 +20,7 @@
 #include "sourcetv.h"
 #include "tournament.h"
 #include "editablecommands.h"
-
+#include "utils.h"
 #include "iclient.h"
 
 #include <chrono>
@@ -236,37 +236,17 @@ void CTournament::StartCompetitiveMatch(void *pGameRules EDX2)
 	static ConVarRef mp_tournament_blueteamname("mp_tournament_blueteamname");
 	static ConVarRef mp_tournament_redteamname("mp_tournament_redteamname");
 
+	std::string strBlueTeamName = mp_tournament_blueteamname.GetString();
+	std::string strRedTeamName  = mp_tournament_redteamname.GetString();
+
+	ReplaceAlphaWithUnderscore(strBlueTeamName);
+	ReplaceAlphaWithUnderscore(strRedTeamName);
+
 	char szBlueTeamName[10];
 	char szRedTeamName[10];
 
-	V_strncpy(szBlueTeamName, mp_tournament_blueteamname.GetString(), sizeof(szBlueTeamName));
-	V_strncpy(szRedTeamName, mp_tournament_redteamname.GetString(), sizeof(szRedTeamName));
-
-	for(int i = 0; i < sizeof(szBlueTeamName)/sizeof(char); i++)
-	{
-		if(!szBlueTeamName[i])
-			break;
-
-		if((szBlueTeamName[i] >= '0' && szBlueTeamName[i] <= '9')
-				|| (szBlueTeamName[i] >= 'A' && szBlueTeamName[i] <= 'Z')
-				|| (szBlueTeamName[i] >= 'a' && szBlueTeamName[i] <= 'z'))
-			continue;
-		else
-			szBlueTeamName[i] = '_';
-	}
-
-	for(int i = 0; i < sizeof(szRedTeamName)/sizeof(char); i++)
-	{
-		if(!szRedTeamName[i])
-			break;
-
-		if((szRedTeamName[i] >= '0' && szRedTeamName[i] <= '9')
-				|| (szRedTeamName[i] >= 'A' && szRedTeamName[i] <= 'Z')
-				|| (szRedTeamName[i] >= 'a' && szRedTeamName[i] <= 'z'))
-			continue;
-		else
-			szRedTeamName[i] = '_';
-	}
+	strncpy(szBlueTeamName, strBlueTeamName.c_str(), sizeof(szBlueTeamName));
+	strncpy(szRedTeamName, strRedTeamName.c_str(), sizeof(szBlueTeamName));
 
 	g_SourceTV.OnTournamentStarted(szBlueTeamName, szRedTeamName);
 
@@ -275,15 +255,21 @@ void CTournament::StartCompetitiveMatch(void *pGameRules EDX2)
 	engine->LogPrint(szMsg);
 
 	static ConVarRef sv_cheats("sv_cheats");
-	if(sv_cheats.GetBool())
+	if (sv_cheats.GetBool())
+	{
 		AllMessage("\003[TFTruer] WARNING: Cheats are enabled !\n");
+	}
 
-	if(*g_sv_pure_mode != 2)
+	if (*g_sv_pure_mode != 2)
+	{
 		AllMessage("\003[TFTruer] WARNING: The server is not correctly set up: sv_pure is not enabled!\n");
+	}
 
-	if(g_Tournament.m_iConfigDownloadFailed)
+	if (g_Tournament.m_iConfigDownloadFailed)
+	{
 		AllMessage("\003[TFTruer] WARNING: The download of %d tournament config files failed! "
 				   "The server might not be setup correctly.\n", g_Tournament.m_iConfigDownloadFailed);
+	}
 
 	g_Logs.OnTournamentStarted();
 
@@ -428,12 +414,16 @@ void CTournament::Tournament_Callback( IConVar *var, const char *pOldValue, floa
 	if (v->GetBool() && !flOldValue)
 	{
 		if(*g_sv_pure_mode == 2 && !tf_gamemode_mvm.GetBool())
+		{
 			sv_pure->m_nFlags |= FCVAR_DEVELOPMENTONLY;
+		}
 
 		g_Tournament.SetTournamentMapVars();
 	}
 	else if(!v->GetBool() && flOldValue)
+	{
 		sv_pure->m_nFlags &= ~FCVAR_DEVELOPMENTONLY;
+	}
 }
 
 void CTournament::Tournament_Restart_Callback(ConCommand *pCmd, EDX const CCommand &args)
@@ -456,40 +446,43 @@ void CTournament::Tournament_Config_Callback( IConVar *var, const char *pOldValu
 
 	ConVar *v = (ConVar*)var;
 	if(v->GetInt() == CONFIG_NONE)
+	{
 		return;
+	}
 
 	switch(v->GetInt())
 	{
-	case CONFIG_ETF2L6v6:
-	{
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_custom.cfg", false);
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_5cp.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_ctf.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_koth.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_stopwatch.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_whitelist_6v6.txt");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_golden_cap.cfg");
+		case CONFIG_ETF2L6v6:
+		{
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_custom.cfg", false);
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_5cp.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_ctf.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_koth.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_6v6_stopwatch.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_whitelist_6v6.txt");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_golden_cap.cfg");
 
-		break;
-	}
-	case CONFIG_ETF2L9v9:
-	{
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_custom.cfg", false);
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_5cp.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_ctf.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_koth.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_stopwatch.cfg");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_whitelist_9v9.txt");
-		g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_golden_cap.cfg");
-		break;
-	}
+			break;
+		}
+		case CONFIG_ETF2L9v9:
+		{
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_custom.cfg", false);
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_5cp.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_ctf.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_koth.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_9v9_stopwatch.cfg");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_whitelist_9v9.txt");
+			g_Tournament.DownloadConfig("https://etf2l.org/configs/etf2l_golden_cap.cfg");
+			break;
+		}
 	}
 
 	if(v->GetInt() != flOldValue && mp_tournament.GetBool())
+
 		g_Tournament.SetTournamentMapVars();
 }
 

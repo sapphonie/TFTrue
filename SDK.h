@@ -20,6 +20,8 @@
 
 #define GAME_DLL 1
 
+#define TFMAXPLAYERS 33
+
 // Fix INVALID_HANDLE_VALUE redefinition warning
 #ifndef _LINUX
 #define WIN32_LEAN_AND_MEAN
@@ -32,7 +34,6 @@
 #include "iserver.h"
 #include "iclient.h"
 #include "inetchannel.h"
-// #include "replay/ienginereplay.h"
 
 #include "cbase.h"
 #include "gamemovement.h"

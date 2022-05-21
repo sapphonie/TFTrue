@@ -46,11 +46,14 @@ void CFOV::OnLoad()
 void CFOV::OnUnload()
 {
 	if(pProp)
+	{
 		pProp->SetProxyFn(oldProxy);
+	}
 }
 
 void CFOV::OnPlayerDisconnect(edict_t *pEntity)
 {
+	// Is this off by one?
 	m_iFOV[IndexOfEdict(pEntity)-1] = -1;
 }
 
@@ -62,7 +65,9 @@ void CFOV::OnFOVCommand(unsigned int uiFOV)
 		m_iFOV[g_Plugin.GetCommandIndex()] = uiFOV;
 	}
 	else
+	{
 		Message(g_Plugin.GetCommandIndex()+1, "\003Usage : !fov [75-%u]", tftrue_maxfov.GetInt());
+	}
 }
 
 void CFOV::OnClientSettingsChanged(edict_t *pEdict)
@@ -80,7 +85,9 @@ void CFOV::OnClientSettingsChanged(edict_t *pEdict)
 
 			CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(pEdict);
 			if(pPlayer)
+			{
 				*g_EntityProps.GetSendProp<int>(pPlayer, "m_iFOV") = iWantedFOV;
+			}
 		}
 	}
 }
@@ -93,9 +100,13 @@ void CFOV::Proxy( const SendProp *pProp, const void *pStructBase, const void *pD
 	if(fovChosen != -1) // player chose a custom fov
 	{
 		if(!fovChange) // fov was reset
+		{
 			pOut->m_Int = fovChosen;
+		}
 		else
+		{
 			pOut->m_Int = fovChange;
+		}
 	}
 	else
 		pOut->m_Int = fovChange;
@@ -108,7 +119,9 @@ void CFOV::Max_FOV_Callback( IConVar *var, const char *pOldValue, float flOldVal
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(i);
 		if(!pPlayer)
+		{
 			continue;
+		}
 
 		if(engine->GetPlayerNetInfo(pPlayer->entindex())) // Not a bot
 		{
@@ -116,9 +129,13 @@ void CFOV::Max_FOV_Callback( IConVar *var, const char *pOldValue, float flOldVal
 			if(iCurrentFOV != 0)
 			{
 				if(iCurrentFOV > v->GetInt())
+				{
 					*g_EntityProps.GetSendProp<int>(pPlayer, "m_iFOV") = v->GetInt();
+				}
 				else if(iCurrentFOV < 75)
+				{
 					*g_EntityProps.GetSendProp<int>(pPlayer, "m_iFOV") = 75;
+				}
 			}
 		}
 	}

@@ -420,7 +420,9 @@ int GetEntIndexFromUserID(int iUserID)
 	{
 		IClient* pClient = g_pServer->GetClient(i);
 		if(pClient && pClient->GetUserID() == iUserID)
+		{
 			return i + 1;
+		}
 	}
 
 	return -1;
@@ -430,10 +432,12 @@ SpewOutputFunc_t g_OldSpewOutputFunc;
 
 SpewRetval_t TFTrueSpew( SpewType_t spewType, const tchar *pMsg )
 {
-    if(tftrue_supress_item_messages.GetBool())
+    if (tftrue_supress_item_messages.GetBool())
     {
-        if(strstr(pMsg, "-> Allowing") || strstr(pMsg, "-> Removing") || strstr(pMsg, "-> Could not find an item definition named"))
+        if (strstr(pMsg, "-> Allowing") || strstr(pMsg, "-> Removing") || strstr(pMsg, "-> Could not find an item definition named"))
+        {
             return SPEW_CONTINUE;
+        }
     }
 
 	return g_OldSpewOutputFunc(spewType, pMsg);
@@ -441,26 +445,26 @@ SpewRetval_t TFTrueSpew( SpewType_t spewType, const tchar *pMsg )
 
 // Problem: the memory is never freed, find a solution for that someday
 unsigned char *PatchAddress(const void *pAddress, unsigned int iOffset, unsigned int iNumBytes, unsigned char* strBytes)
-{   
+{
 	unsigned char* ucSavedBytes = new unsigned char[iNumBytes];
-#ifdef _WIN32
-	DWORD dwback;
-	VirtualProtect(((unsigned char*)pAddress + iOffset), iNumBytes, PAGE_READWRITE, &dwback);
-#else
-	mprotect((void*)((unsigned int)((unsigned long)pAddress + iOffset) & ~(sysconf(_SC_PAGE_SIZE) - 1)), iNumBytes + ((unsigned int)((unsigned long)pAddress + iOffset) & (sysconf(_SC_PAGE_SIZE) - 1)), PROT_READ | PROT_WRITE | PROT_EXEC);
-#endif
+	#ifdef _WIN32
+		DWORD dwback;
+		VirtualProtect(((unsigned char*)pAddress + iOffset), iNumBytes, PAGE_READWRITE, &dwback);
+	#else
+		mprotect((void*)((unsigned int)((unsigned long)pAddress + iOffset) & ~(sysconf(_SC_PAGE_SIZE) - 1)), iNumBytes + ((unsigned int)((unsigned long)pAddress + iOffset) & (sysconf(_SC_PAGE_SIZE) - 1)), PROT_READ | PROT_WRITE | PROT_EXEC);
+	#endif
 
-	for(unsigned int i = 0; i < iNumBytes; i++)
+	for (unsigned int i = 0; i < iNumBytes; i++)
 	{
 		ucSavedBytes[i] = ((unsigned char*)(pAddress))[iOffset+i];
 		((unsigned char*)(pAddress))[iOffset+i] = strBytes[i];
 	}
-#ifdef _WIN32
-	DWORD dwback2;
-	VirtualProtect(((unsigned char*)pAddress + iOffset), iNumBytes, dwback, &dwback2);		// Protect again the source address
-#else
-	mprotect((void*)((unsigned int)((unsigned long)pAddress + iOffset) & ~(sysconf(_SC_PAGE_SIZE) - 1)), iNumBytes + ((unsigned int)((unsigned long)pAddress + iOffset) & (sysconf(_SC_PAGE_SIZE) - 1)), PROT_READ | PROT_EXEC);
-#endif   
+	#ifdef _WIN32
+		DWORD dwback2;
+		VirtualProtect(((unsigned char*)pAddress + iOffset), iNumBytes, dwback, &dwback2);		// Protect again the source address
+	#else
+		mprotect((void*)((unsigned int)((unsigned long)pAddress + iOffset) & ~(sysconf(_SC_PAGE_SIZE) - 1)), iNumBytes + ((unsigned int)((unsigned long)pAddress + iOffset) & (sysconf(_SC_PAGE_SIZE) - 1)), PROT_READ | PROT_EXEC);
+	#endif
 	return ucSavedBytes;
 }
 
@@ -709,3 +713,11 @@ DWORD GetModuleLoadCount(HMODULE hmod)
 	return NULL;
 }
 #endif
+
+
+std::string ReplaceAlphaWithUnderscore(std::string ourstring)
+{
+	std::regex alphargx("[^a-zA-Z0-9]");
+	std::regex_replace(ourstring, alphargx, "_");
+	return ourstring;
+}

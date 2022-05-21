@@ -20,7 +20,7 @@
 
 #include "SDK.h"
 #include "ModuleScanner.h"
-
+#include <curl/curl.h>
 class CItems
 {
 public:
@@ -63,3 +63,35 @@ extern ConVar tftrue_no_hats;
 extern ConVar tftrue_no_misc;
 extern ConVar tftrue_no_action;
 extern ConVar tftrue_whitelist_id;
+
+int wltf_mtime;
+
+void Curl_LastUpdateTime_GetResponse(void* ptr, size_t size, size_t nmemb, void* stream)
+{
+    if (ptr)
+    {
+        // this is evil and ugly
+        wltf_mtime = std::stoi(static_cast<char*>(ptr));
+        return;
+    }
+
+    wltf_mtime = 0;
+    return;
+}
+
+bool GetLastUpdateTime()
+{
+    CURL *curl;
+    curl = curl_easy_init();
+    if (curl)
+    {
+        curl_easy_setopt(curl, CURLOPT_URL, "https://whitelist.tf/last_update_time");
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, Curl_LastUpdateTime_GetResponse);
+        curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        return true;
+    }
+
+    return false;
+}
