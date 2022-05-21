@@ -165,8 +165,10 @@ bool CLogs::Init(const CModuleScanner& EngineModule, const CModuleScanner& Serve
 
 void CLogs::OnUnload()
 {
-	for(int i = 0; i < 34; i++)
+	for (int i = 1; i <= g_pServer->GetMaxClients(); i++)
+	{
 		mapHealing[i].clear();
+	}
 
 	gameeventmanager->RemoveListener(this);
 }
@@ -210,11 +212,11 @@ void CLogs::OnDisconnect(edict_t *pEntity)
 {
 	int iEntIndex = IndexOfEdict(pEntity);
 
-	for(int i = 0; i < 34; i++)
+	for (int i = 1; i <= g_pServer->GetMaxClients(); i++)
 	{
 		if(mapHealing[i].size() > 0)
 		{
-			for(auto it = mapHealing[i].begin(); it != mapHealing[i].end();)
+			for (auto it = mapHealing[i].begin(); it != mapHealing[i].end();)
 			{
 				// If it was a patient or a healer
 				if(it->first == iEntIndex || i == iEntIndex-1)

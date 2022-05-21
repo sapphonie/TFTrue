@@ -62,7 +62,7 @@ public:
 	static void ApiKey_Callback( IConVar *var, const char *pOldValue, float flOldValue );
 
 private:
-	std::map<int, int> mapHealing[34];
+	std::map<int, int> mapHealing[TFMAXPLAYERS+1];
 
 	float m_flHealingPrintTime = 0.0f;
 
@@ -80,9 +80,9 @@ private:
 
 	float m_flLastRoundStart = 0.0f;
 
-	unsigned int m_uiLastHealOnHit[34];
+	unsigned int m_uiLastHealOnHit[TFMAXPLAYERS+1];
 
-	unsigned int m_uiLastDirectHitVictim[34];
+	unsigned int m_uiLastDirectHitVictim[TFMAXPLAYERS+1];
 
 	static void __fastcall Event_PlayerHealedOther( void *pTFGameStats, EDX CBasePlayer *pPlayer, float flHealing );
 	static void __fastcall Event_PlayerFiredWeapon( void *pTFGameStats, EDX CBasePlayer *pPlayer, bool bCritical );

@@ -40,7 +40,7 @@
 CTFTrue g_Plugin;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CTFTrue, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, g_Plugin )
 
-ConVar tftrue_version("tftrue_version", "5.03", FCVAR_NOTIFY|FCVAR_CHEAT,
+ConVar tftrue_version("tftrue_version", "5.04c", FCVAR_NOTIFY|FCVAR_CHEAT,
 	"Version of the plugin.",
         &CTFTrue::Version_Callback);
 ConVar tftrue_gamedesc("tftrue_gamedesc", "", FCVAR_NONE,
@@ -64,7 +64,6 @@ IServerPluginHelpers*   helpers             = nullptr;
 IServer*                g_pServer           = nullptr;
 IGameMovement*          gamemovement        = nullptr;
 CGameMovement*          g_pGameMovement     = nullptr;
-// IEngineReplay*          g_pEngineReplay     = nullptr;
 IServerGameClients*     g_pGameClients      = nullptr;
 IEngineTrace*           g_pEngineTrace      = nullptr;
 IServerTools*           g_pServerTools      = nullptr;
@@ -91,7 +90,6 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 		gameeventmanager      = (IGameEventManager2*)   interfaceFactory( INTERFACEVERSION_GAMEEVENTSMANAGER2, NULL );
 		helpers               = (IServerPluginHelpers*) interfaceFactory( INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL );
 		gamemovement          = (IGameMovement*)        gameServerFactory( INTERFACENAME_GAMEMOVEMENT, NULL );
-		// g_pEngineReplay       = (IEngineReplay*)        interfaceFactory( ENGINE_REPLAY_INTERFACE_VERSION, NULL );
 		g_pGameClients        = (IServerGameClients*)   gameServerFactory( INTERFACEVERSION_SERVERGAMECLIENTS, NULL );
 		g_pEngineTrace        = (IEngineTrace*)         interfaceFactory( INTERFACEVERSION_ENGINETRACE_SERVER, NULL );
 		g_pServerTools        = (IServerTools*)         gameServerFactory( VSERVERTOOLS_INTERFACE_VERSION, NULL );
@@ -99,12 +97,6 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
         // In TF2 we can just get the IServer from the engine
 		g_pServer             = engine->GetIServer();
 
-		/*
-		if (g_pEngineReplay)
-		{
-			g_pServer = g_pEngineReplay->GetGameServer();
-		}
-		*/
 
 		Warning("\
 *engine             %p\n\
@@ -282,17 +274,19 @@ void CTFTrue::Unload( void )
 		g_Tournament.OnUnload();
 
 		#ifndef _LINUX
-		// Fix plugin unloading
-		// Blame Microsoft
-		// connect.microsoft.com/VisualStudio/feedback/details/781665/
-		MEMORY_BASIC_INFORMATION mbi;
-		static int dummy;
-		VirtualQuery( &dummy, &mbi, sizeof(mbi) );
+			// Fix plugin unloading
+			// Blame Microsoft
+			// connect.microsoft.com/VisualStudio/feedback/details/781665/
+			MEMORY_BASIC_INFORMATION mbi;
+			static int dummy;
+			VirtualQuery( &dummy, &mbi, sizeof(mbi) );
 
-		// Get the reference count on every iteration
-		// because calling FreeLibrary can decrement it twice
-		while(GetModuleLoadCount((HMODULE)mbi.AllocationBase) > 1)
-			FreeLibrary((HMODULE)mbi.AllocationBase);
+			// Get the reference count on every iteration
+			// because calling FreeLibrary can decrement it twice
+			while(GetModuleLoadCount((HMODULE)mbi.AllocationBase) > 1)
+			{
+				FreeLibrary((HMODULE)mbi.AllocationBase);
+			}
 		#endif
 	}
 
@@ -540,7 +534,9 @@ void CTFTrue::Say_Callback(ConCommand *pCmd, EDX const CCommand &args)
 			}
 		}
 		else
+		{
 			sprintf(szLine+iItemLineLength, " \003Whitelist: \005None");
+		}
 
 		Message(g_Plugin.GetCommandIndex()+1, "%s", szLine);
 
@@ -557,14 +553,14 @@ void CTFTrue::Say_Callback(ConCommand *pCmd, EDX const CCommand &args)
 
 			switch(tftrue_tournament_config.GetInt())
 			{
-			case CTournament::CONFIG_NONE:
-				Message(g_Plugin.GetCommandIndex()+1, "\003Tournament config: \005None");
-				break;
-			case CTournament::CONFIG_ETF2L6v6:
-				Message(g_Plugin.GetCommandIndex()+1, "\003Tournament config: \005ETF2L 6v6");
-				break;
-			case CTournament::CONFIG_ETF2L9v9:
-				Message(g_Plugin.GetCommandIndex()+1, "\003Tournament config: \005ETF2L 9v9");
+				case CTournament::CONFIG_NONE:
+					Message(g_Plugin.GetCommandIndex()+1, "\003Tournament config: \005None");
+					break;
+				case CTournament::CONFIG_ETF2L6v6:
+					Message(g_Plugin.GetCommandIndex()+1, "\003Tournament config: \005ETF2L 6v6");
+					break;
+				case CTournament::CONFIG_ETF2L9v9:
+					Message(g_Plugin.GetCommandIndex()+1, "\003Tournament config: \005ETF2L 9v9");
 				break;
 			}
 		}
@@ -601,6 +597,7 @@ void CTFTrue::Say_Callback(ConCommand *pCmd, EDX const CCommand &args)
 	}
 }
 
+// ?
 void CTFTrue::ChangeLevel(IVEngineServer *pServer, EDX const char *s1, const char *s2)
 {
 	if(!s1)
