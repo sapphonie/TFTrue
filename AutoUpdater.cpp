@@ -78,7 +78,7 @@ bool CAutoUpdater::IsModuleValid(std::string strFileName)
 void CAutoUpdater::OnGameFrame()
 {
 	// If there is only one player left or none playing on the server, we can update
-    if(g_pServer->GetNumPlayers() <= 1 && steam.SteamHTTP())
+    if(server->GetNumPlayers() <= 1 && steam.SteamHTTP())
 	{
 		static time_t tLastCheckTime = time(NULL);
 		// Only every hour

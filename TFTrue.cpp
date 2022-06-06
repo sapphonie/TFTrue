@@ -32,6 +32,14 @@
 #include "tournament.h"
 #include "editablecommands.h"
 
+
+#include "stats.h"
+#include "MRecipient.h"
+#include "utils.h"
+
+#include "player_resource.h"
+
+
 #ifdef DEBUG
 	#define NO_AUTOUPDATE
 #endif
@@ -39,18 +47,19 @@
 CTFTrue g_Plugin;
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CTFTrue, IServerPluginCallbacks, INTERFACEVERSION_ISERVERPLUGINCALLBACKS, g_Plugin )
 
-ConVar tftrue_version("tftrue_version", "5.05", FCVAR_NOTIFY|FCVAR_CHEAT,
+ConVar tftrue_version("tftrue_version", "5.06", FCVAR_NOTIFY|FCVAR_CHEAT,
 	"Version of the plugin.",
-        &CTFTrue::Version_Callback);
+	&CTFTrue::Version_Callback);
 ConVar tftrue_gamedesc("tftrue_gamedesc", "", FCVAR_NONE,
 	"Set the description you want to show in the game description column of the server browser. Max 40 characters.",
-        &CTFTrue::GameDesc_Callback);
+	&CTFTrue::GameDesc_Callback);
 ConVar tftrue_freezecam("tftrue_freezecam", "1", FCVAR_NOTIFY,
 	"Activate/Deactivate the freeze cam.",
-        true, 0, true, 1,
-        &CTFTrue::Freezecam_Callback);
+	true, 0, true, 1,
+	&CTFTrue::Freezecam_Callback);
 
 IVEngineServer*         engine              = nullptr;
+IServer*                server              = nullptr;
 IPlayerInfoManager*     playerinfomanager   = nullptr;
 IServerGameDLL*         gamedll             = nullptr;
 IServerGameEnts*        gameents            = nullptr;
@@ -60,10 +69,8 @@ CBaseEntityList*        g_pEntityList       = nullptr;
 IFileSystem*            filesystem          = nullptr;
 IGameEventManager2*     gameeventmanager    = nullptr;
 IServerPluginHelpers*   helpers             = nullptr;
-IServer*                g_pServer           = nullptr;
 IGameMovement*          gamemovement        = nullptr;
 CGameMovement*          g_pGameMovement     = nullptr;
-// IEngineReplay*          g_pEngineReplay     = nullptr;
 IServerGameClients*     g_pGameClients      = nullptr;
 IEngineTrace*           g_pEngineTrace      = nullptr;
 IServerTools*           g_pServerTools      = nullptr;
@@ -79,6 +86,9 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 
 	if (m_iLoadCount <= 1)
 	{
+		CModuleScanner ServerModule((void*)gameServerFactory);
+		CModuleScanner EngineModule((void*)interfaceFactory);
+
 		engine                = (IVEngineServer*)       interfaceFactory( INTERFACEVERSION_VENGINESERVER, NULL );
 		playerinfomanager     = (IPlayerInfoManager*)   gameServerFactory( INTERFACEVERSION_PLAYERINFOMANAGER, NULL );
 		g_pCVar               = (ICvar*)                interfaceFactory( CVAR_INTERFACE_VERSION, NULL );
@@ -88,38 +98,56 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 		gameeventmanager      = (IGameEventManager2*)   interfaceFactory( INTERFACEVERSION_GAMEEVENTSMANAGER2, NULL );
 		helpers               = (IServerPluginHelpers*) interfaceFactory( INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL );
 		gamemovement          = (IGameMovement*)        gameServerFactory( INTERFACENAME_GAMEMOVEMENT, NULL );
-		// g_pEngineReplay       = (IEngineReplay*)        interfaceFactory( ENGINE_REPLAY_INTERFACE_VERSION, NULL );
+		// g_pEngineReplay    = (IEngineReplay*)        interfaceFactory( ENGINE_REPLAY_INTERFACE_VERSION, NULL );
 		g_pGameClients        = (IServerGameClients*)   gameServerFactory( INTERFACEVERSION_SERVERGAMECLIENTS, NULL );
 		g_pEngineTrace        = (IEngineTrace*)         interfaceFactory( INTERFACEVERSION_ENGINETRACE_SERVER, NULL );
 		g_pServerTools        = (IServerTools*)         gameServerFactory( VSERVERTOOLS_INTERFACE_VERSION, NULL );
 
-        // In TF2 we can just get the IServer from the engine
-		g_pServer             = engine->GetIServer();
 
-		/*
-		if (g_pEngineReplay)
-		{
-			g_pServer = g_pEngineReplay->GetGameServer();
-		}
-		*/
+
+		char* os;
+
+		#ifdef _LINUX
+
+			os = (char*)"Linux";
+
+			server                         = (IServer*)EngineModule.FindSymbol(
+				"sv"
+			);
+			// server                      = (IServer*)EngineModule.FindSignature((unsigned char *)
+			// "\x55\x89\xE5\x83\xEC\x18\x8B\x45\x0C\xC7\x04\x24\x2A\x2A\x2A\x2A\x89\x44\x24\x04\xA1\x2A\x2A\x2A\x2A\x55\x89\xE5\x83\xEC\x18\x8B\x45\x0C\xC7\x04\x24\x2A\x2A\x2A\x2A\x89\x44\x24\x04\xA1\x2A\x2A\x2A\x2A",
+			// "xxxxxxxxxxxx????xxxxx????xxxxxxxxxxxx????xxxxx????");
+			//
+			// server += 10;
+		#else
+
+			os = (char*)"Windows";
+
+			server                         = (IServer*)EngineModule.FindSignature((unsigned char *)
+				"\x55\x8B\xEC\xFF\x75\x08\xB9\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x85\xC0", "xxxxxxx????x????xx");
+			srv += 7;
+		#endif
+
+
+
 
 		Warning("\
 *engine             %p\n\
+*server             %p\n\
 *playerinfomgr      %p\n\
 *cvar               %p\n\
 *gamedll            %p\n\
-*gaments            %p\n\
+*gameents           %p\n\
 *filesys            %p\n\
 *helpers            %p\n\
 *gamemov            %p\n\
 *gameeventmgr       %p\n\
-*engreplay          %p\n\
 *gameclients        %p\n\
 *engtrace           %p\n\
 *servertools        %p\n\
-*server             %p\n\
 ",
 		(void*)engine,
+		(void*)server,
 		(void*)playerinfomanager,
 		(void*)g_pCVar,
 		(void*)gamedll,
@@ -130,14 +158,14 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 		(void*)gameeventmanager,
 		(void*)g_pGameClients,
 		(void*)g_pEngineTrace,
-		(void*)g_pServerTools,
-		(void*)g_pServer
+		(void*)g_pServerTools
 		);
 
 
 		if
 		(
 			   !engine
+			|| !server
 			|| !playerinfomanager
 			|| !g_pCVar
 			|| !gamedll
@@ -149,7 +177,6 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 			|| !g_pGameClients
 			|| !g_pEngineTrace
 			|| !g_pServerTools
-			|| !g_pServer
 		)
 		{
 			Warning("[TFTruer] Can't load needed interfaces!\n");
@@ -165,9 +192,6 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 
 		ConVar_Register();
 		MathLib_Init();
-
-		CModuleScanner ServerModule((void*)gameServerFactory);
-		CModuleScanner EngineModule((void*)interfaceFactory);
 
 		g_AutoUpdater.Init();
 		if(!g_Stats.Init(ServerModule))
@@ -345,7 +369,7 @@ PLUGIN_RESULT CTFTrue::ClientCommand( edict_t *pEntity, const CCommand &args )
 		return PLUGIN_CONTINUE;
 	}
 
-	IClient* pClient = g_pServer->GetClient(icl-1);
+	IClient* pClient = server->GetClient(icl-1);
 	if (!pClient || !pClient->IsActive())
 	{
 		return PLUGIN_CONTINUE;
@@ -512,7 +536,7 @@ void CTFTrue::Say_Callback(ConCommand *pCmd, EDX const CCommand &args)
 	}
 
 	// use engine
-	if(g_pServer->IsPaused())
+	if(server->IsPaused())
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(g_Plugin.GetCommandIndex()+1);
 		// Set last talk time to 0.0f

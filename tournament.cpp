@@ -573,7 +573,7 @@ void CTournament::Pause_Callback(ConCommand *pCmd, EDX const CCommand &args)
 		// client index
 		int icl                 = *cmd_clientslot + 1;
 
-		IClient* pClient        = g_pServer->GetClient(*cmd_clientslot);
+		IClient* pClient        = server->GetClient(*cmd_clientslot);
 
 		// null or not active client
 		if (!pClient || !pClient->IsActive())
@@ -607,7 +607,7 @@ void CTournament::Pause_Callback(ConCommand *pCmd, EDX const CCommand &args)
 		}
 
 		// unpausing
-		if(g_pServer->IsPaused())
+		if(server->IsPaused())
 		{
 			if(time(NULL) >= g_Tournament.m_tNextUnpauseAllowed)
 			{

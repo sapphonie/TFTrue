@@ -416,9 +416,9 @@ int UTIL_FindInDataMap(datamap_t *pMap, const char *name)
 
 int GetEntIndexFromUserID(int iUserID)
 {
-	for(int i = 0; i < g_pServer->GetClientCount(); i++)
+	for(int i = 0; i < server->GetClientCount(); i++)
 	{
-		IClient* pClient = g_pServer->GetClient(i);
+		IClient* pClient = server->GetClient(i);
 		if(pClient && pClient->GetUserID() == iUserID)
 			return i + 1;
 	}

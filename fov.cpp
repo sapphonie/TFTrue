@@ -104,7 +104,7 @@ void CFOV::Proxy( const SendProp *pProp, const void *pStructBase, const void *pD
 void CFOV::Max_FOV_Callback( IConVar *var, const char *pOldValue, float flOldValue )
 {
 	ConVar* v = (ConVar*)var;
-	for ( int i = 1; i <= g_pServer->GetClientCount(); i++ )
+	for ( int i = 1; i <= server->GetClientCount(); i++ )
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(i);
 		if(!pPlayer)

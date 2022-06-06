@@ -53,15 +53,15 @@ void MRecipientFilter::MakeReliable( void )
 void MRecipientFilter::AddAllPlayers()
 {
 	m_Recipients.clear();
-	for ( int i = 0; i < g_pServer->GetNumClients(); i++ )
+	for ( int i = 0; i < server->GetNumClients(); i++ )
 	{
-		IClient* pClient = g_pServer->GetClient(i);
+		IClient* pClient = server->GetClient(i);
 		if ( !pClient || !pClient->IsConnected())
 			continue;
 
 		AddRecipient(i + 1);
 	}
-} 
+}
 void MRecipientFilter::AddRecipient( int iPlayer )
 {
 	// Already in list

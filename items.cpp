@@ -392,7 +392,7 @@ void CItems::RebuildWhitelist(IConVar *var, const char *pOldValue, float flOldVa
 	reinterpret_cast<ReloadWhitelistFn>(g_Items.ReloadWhitelist)(pEconItemSystem);
 
 	// Reload items of all players
-	for ( int i = 1; i <= g_pServer->GetClientCount(); i++ )
+	for ( int i = 1; i <= server->GetClientCount(); i++ )
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(i);
 		if (!pPlayer)

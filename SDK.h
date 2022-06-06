@@ -44,14 +44,14 @@
 #include "steam/isteamclient.h"
 #include "steam/steam_gameserver.h"
 
-extern IVEngineServer *engine;
+extern IVEngineServer* engine;
+extern IServer* server;
 extern IPlayerInfoManager *playerinfomanager;
 extern ICvar *g_pCVar;
 extern IServerGameDLL *gamedll;
 extern IServerGameEnts *gameents;
 extern IFileSystem *filesystem;
 extern IServerPluginHelpers* helpers;
-extern IServer* g_pServer;
 extern CGlobalVars *gpGlobals;
 extern CGlobalEntityList *pEntList;
 extern CGameMovement* g_pGameMovement;

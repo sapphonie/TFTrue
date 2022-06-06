@@ -285,7 +285,7 @@ void CLogs::LogUberchargeStatus()
 	static ConVarRef mp_tournament("mp_tournament");
 	static ConVarRef tf_gamemode_mvm("tf_gamemode_mvm");
 
-	for(int i = 1; i <= g_pServer->GetClientCount(); i++)
+	for(int i = 1; i <= server->GetClientCount(); i++)
 	{
 		CBasePlayer *pPlayer = (CBasePlayer*)CBaseEntity::Instance(i);
 		if(!pPlayer)
@@ -874,7 +874,7 @@ int CLogs::OnTakeDamage( CBasePlayer *pPlayer, EDX const CTakeDamageInfo &info )
 
 	CBasePlayer *pAttacker = (CBasePlayer*)info.GetAttacker();
 
-	if(pPlayer != pAttacker && IndexOfEntity(pAttacker) > 0 && IndexOfEntity(pAttacker) <= g_pServer->GetClientCount())
+	if(pPlayer != pAttacker && IndexOfEntity(pAttacker) > 0 && IndexOfEntity(pAttacker) <= server->GetClientCount())
 	{
 		edict_t *pEdictVictim = gameents->BaseEntityToEdict(pPlayer);
 
@@ -914,7 +914,7 @@ void CLogs::Event_PlayerDamage( void *pTFGameStats, EDX CBasePlayer *pPlayer, co
 {
 	CBasePlayer *pAttacker = (CBasePlayer*)info.GetAttacker();
 
-	if(pPlayer != pAttacker && IndexOfEntity(pAttacker) > 0 && IndexOfEntity(pAttacker) <= g_pServer->GetClientCount())
+	if(pPlayer != pAttacker && IndexOfEntity(pAttacker) > 0 && IndexOfEntity(pAttacker) <= server->GetClientCount())
 	{
 		edict_t *pEdictAttacker = gameents->BaseEntityToEdict(pAttacker);
 		edict_t *pEdictVictim = gameents->BaseEntityToEdict(pPlayer);
