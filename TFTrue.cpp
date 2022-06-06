@@ -60,6 +60,7 @@ ConVar tftrue_freezecam("tftrue_freezecam", "1", FCVAR_NOTIFY,
 
 IVEngineServer*         engine              = nullptr;
 IServer*                server              = nullptr;
+IServer*                server2             = nullptr;
 IPlayerInfoManager*     playerinfomanager   = nullptr;
 IServerGameDLL*         gamedll             = nullptr;
 IServerGameEnts*        gameents            = nullptr;
@@ -86,10 +87,16 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 
 	if (m_iLoadCount <= 1)
 	{
-		CModuleScanner ServerModule((void*)gameServerFactory);
-		CModuleScanner EngineModule((void*)interfaceFactory);
 
 		engine                = (IVEngineServer*)       interfaceFactory( INTERFACEVERSION_VENGINESERVER, NULL );
+
+		if (!engine)
+		{
+			Warning("[TFTruer] COULDN'T GET ENGINE INTERFACE!");
+			return false;
+		}
+		server                = (IServer*)              engine->GetIServer();
+
 		playerinfomanager     = (IPlayerInfoManager*)   gameServerFactory( INTERFACEVERSION_PLAYERINFOMANAGER, NULL );
 		g_pCVar               = (ICvar*)                interfaceFactory( CVAR_INTERFACE_VERSION, NULL );
 		gamedll               = (IServerGameDLL*)       gameServerFactory( INTERFACEVERSION_SERVERGAMEDLL, NULL );
@@ -98,38 +105,9 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 		gameeventmanager      = (IGameEventManager2*)   interfaceFactory( INTERFACEVERSION_GAMEEVENTSMANAGER2, NULL );
 		helpers               = (IServerPluginHelpers*) interfaceFactory( INTERFACEVERSION_ISERVERPLUGINHELPERS, NULL );
 		gamemovement          = (IGameMovement*)        gameServerFactory( INTERFACENAME_GAMEMOVEMENT, NULL );
-		// g_pEngineReplay    = (IEngineReplay*)        interfaceFactory( ENGINE_REPLAY_INTERFACE_VERSION, NULL );
 		g_pGameClients        = (IServerGameClients*)   gameServerFactory( INTERFACEVERSION_SERVERGAMECLIENTS, NULL );
 		g_pEngineTrace        = (IEngineTrace*)         interfaceFactory( INTERFACEVERSION_ENGINETRACE_SERVER, NULL );
 		g_pServerTools        = (IServerTools*)         gameServerFactory( VSERVERTOOLS_INTERFACE_VERSION, NULL );
-
-
-
-		char* os;
-
-		#ifdef _LINUX
-
-			os = (char*)"Linux";
-
-			server                         = (IServer*)EngineModule.FindSymbol(
-				"sv"
-			);
-			// server                      = (IServer*)EngineModule.FindSignature((unsigned char *)
-			// "\x55\x89\xE5\x83\xEC\x18\x8B\x45\x0C\xC7\x04\x24\x2A\x2A\x2A\x2A\x89\x44\x24\x04\xA1\x2A\x2A\x2A\x2A\x55\x89\xE5\x83\xEC\x18\x8B\x45\x0C\xC7\x04\x24\x2A\x2A\x2A\x2A\x89\x44\x24\x04\xA1\x2A\x2A\x2A\x2A",
-			// "xxxxxxxxxxxx????xxxxx????xxxxxxxxxxxx????xxxxx????");
-			//
-			// server += 10;
-		#else
-
-			os = (char*)"Windows";
-
-			server                         = (IServer*)EngineModule.FindSignature((unsigned char *)
-				"\x55\x8B\xEC\xFF\x75\x08\xB9\x2A\x2A\x2A\x2A\xE8\x2A\x2A\x2A\x2A\x85\xC0", "xxxxxxx????x????xx");
-			srv += 7;
-		#endif
-
-
-
 
 		Warning("\
 *engine             %p\n\
@@ -192,6 +170,9 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 
 		ConVar_Register();
 		MathLib_Init();
+
+		CModuleScanner ServerModule((void*)gameServerFactory);
+		CModuleScanner EngineModule((void*)interfaceFactory);
 
 		g_AutoUpdater.Init();
 		if(!g_Stats.Init(ServerModule))
