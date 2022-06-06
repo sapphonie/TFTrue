@@ -412,9 +412,15 @@ void CTFTrue::ServerActivate( edict_t *pEdictList, int edictCount, int clientMax
 // This function will create an accurate game name for us
 void CTFTrue::UpdateGameDesc()
 {
-	V_snprintf(m_szGameDesc, sizeof(m_szGameDesc), "TFTruer %s ", tftrue_gamedesc.GetString());
-
-	if(steam.SteamGameServer())
+	if (tftrue_gamedesc.GetString())
+	{
+		snprintf(m_szGameDesc, sizeof(m_szGameDesc), "TFTruer %s", tftrue_gamedesc.GetString());
+	}
+	else
+	{
+		snprintf(m_szGameDesc, sizeof(m_szGameDesc), "TFTruer");
+	}
+	if (steam.SteamGameServer())
 	{
 		steam.SteamGameServer()->SetGameDescription(m_szGameDesc);
 	}
