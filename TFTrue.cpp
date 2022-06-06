@@ -163,10 +163,6 @@ bool CTFTrue::Load( CreateInterfaceFn interfaceFactory, CreateInterfaceFn gameSe
 
 		g_pGameMovement = (CGameMovement*)gamemovement;
 
-		steam.Init();
-
-		UpdateGameDesc();
-
 		ConVar_Register();
 		MathLib_Init();
 
@@ -412,7 +408,7 @@ void CTFTrue::ServerActivate( edict_t *pEdictList, int edictCount, int clientMax
 // This function will create an accurate game name for us
 void CTFTrue::UpdateGameDesc()
 {
-	if ( (tftrue_gamedesc.GetString())[0] != '\0' )
+	if ( ( tftrue_gamedesc.GetString() )[0] != '\0' )
 	{
 		snprintf(m_szGameDesc, sizeof(m_szGameDesc), "TFTruer %s", tftrue_gamedesc.GetString());
 	}
@@ -421,11 +417,22 @@ void CTFTrue::UpdateGameDesc()
 		snprintf(m_szGameDesc, sizeof(m_szGameDesc), "TFTruer");
 	}
 
-	if (steam.SteamGameServer())
+	Warning("%s\n", m_szGameDesc);
+	Warning("%x\n", steam.SteamGameServer());
+
+	if (!steam.SteamGameServer())
 	{
-		Warning("%s", m_szGameDesc);
-		steam.SteamGameServer()->SetGameDescription(m_szGameDesc);
+		return;
 	}
+
+	if (!steam.Init())
+	{
+		Warning("[TFTruer] Couldn't init Steam to set the game description!\n");
+		return;
+	}
+
+	Warning("[TFTruer] Setting game description to \"%s\"!\n", m_szGameDesc);
+	steam.SteamGameServer()->SetGameDescription(m_szGameDesc);
 }
 
 const char* CTFTrue::GetGameDescription(IServerGameDLL *gamedll EDX2)
@@ -486,12 +493,14 @@ void CTFTrue::GameServerSteamAPIActivated(IServerGameDLL *gamedll EDX2)
 	typedef void (__thiscall *GameServerSteamAPIActivated_t)(IServerGameDLL *gamedll);
 	g_Plugin.m_GameServerSteamAPIActivatedRoute.CallOriginalFunction<GameServerSteamAPIActivated_t>()(gamedll);
 
-	if(steam.Init())
+	if (!steam.Init())
 	{
+		Warning("[TFTruer] Couldn't init steam on SteamAPIActivated!\n");
+	}
 	#ifndef NO_AUTOUPDATE
 		g_AutoUpdater.CheckUpdate();
 	#endif
-	}
+	g_Plugin.UpdateGameDesc();
 }
 
 void CTFTrue::Say_Callback(ConCommand *pCmd, EDX const CCommand &args)
