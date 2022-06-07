@@ -496,6 +496,11 @@ void CTournament::Tournament_Config_Callback( IConVar *var, const char *pOldValu
 
 void CTournament::Pure_Callback(ConCommand *pCmd, EDX const CCommand &args)
 {
+	if (!pCmd)
+	{
+		return;
+	}
+
 	static ConVarRef mp_tournament("mp_tournament");
 	static ConVarRef tf_gamemode_mvm("tf_gamemode_mvm");
 
